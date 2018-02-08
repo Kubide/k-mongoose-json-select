@@ -1,22 +1,28 @@
-var util = require('util'),
+let lodash = require('lodash'),
   mongoose = require('mongoose'),
   clone = require('clone'),
-  _toJSON = mongoose.Document.prototype.toJSON;
+  _toJSON = mongoose.Document.prototype.toJSON,
+  defaultExcludedFields = ['_id','id','__v'];
 
 
-// convert string formatted fields to object formatted ones
+/**
+ * Convert string formatted fields to object formatted ones
+ *
+ * @param fields
+ * @returns {*}
+ */
 function normalizeFields(fields) {
   if (!fields) return;
 
   if (fields.constructor.name === 'Object') {
     return fields;
   } else if ('string' === typeof fields) {
-    var _fields = {};
+    let _fields = {};
 
     fields.split(/\s+/).forEach(function(field) {
       if (!field) return;
 
-      var include = +(field[0] !== '-');
+      let include = +(field[0] !== '-');
 
       field = include ? field : field.substring(1);
       _fields[field] = include;
@@ -27,119 +33,127 @@ function normalizeFields(fields) {
   throw new TypeError('Invalid select fields. Must be a string or object.');
 }
 
-// create an empty object or array as a destination to copy
-function emptyObject(obj) {
-  if (obj && obj.constructor.name === 'Object') {
-    return {};
-  } else if (util.isArray(obj)) {
-    return [];
-  }
+function searchInFields(search, fields) {
+  if(!fields) return false;
+
+  const find = lodash.find(Object.keys(fields), function(field) {
+    return field === search;
+  });
+
+  return !!find;
 }
 
-// copy a value recursively
-function pick(src, dst, field) {
-  if (!src || !dst) return;
+function onlyToNull(data,fields) {
+  Object.keys(data).forEach(function(dataField) {
+    if(!searchInFields(dataField,fields)){
+      data[dataField] = null;
+    }else {
+      if (lodash.isArray(data[dataField])) {
+        data[dataField].forEach(function (dataArray) {
+          onlyToNull(dataArray, fields);
+        });
+        return;
+      }
 
-  if (util.isArray(src)) {
-    pickArray(src, dst, field);
-    return;
-  }
-
-  var _field = field[0],
-    _src, _dst;
-
-  if (!(_field in src)) return;
-  _src = src[_field];
-
-  if (field.length > 1) {
-    if (_field in dst) {
-      // get a reference when a value already exists
-      _dst = dst[_field];
-    } else {
-      _dst = emptyObject(_src);
-      if (_dst) {
-        dst[_field] = _dst;
+      // With the default excluded fields
+      // Avoid to iterate in _id (ObjectId)
+      if (typeof data[dataField] === 'object' &&
+          defaultExcludedFields.indexOf(dataField) === -1) {
+        onlyToNull(data[dataField], fields[dataField]);
       }
     }
-
-    // continue to search nested objects
-    pick(_src, _dst, field.slice(1));
-    return;
-  }
-
-  dst[_field] = clone(_src);
-}
-
-// pick only objects and arrays from a array
-function pickArray(src, dst, field) {
-  var i = 0;
-
-  src.forEach(function(_src) {
-    var _dst;
-
-    if (dst.length > i) {
-      _dst = dst[i];
-      i++;
-    } else {
-      _dst = emptyObject(_src);
-      if (_dst) {
-        dst.push(_dst);
-        i++;
-      }
-    }
-
-    pick(_src, _dst, field);
   });
 }
-
+/**
+ * Only set selected data, other set to null
+ *
+ * @param data
+ * @param fields
+ * @returns {*}
+ */
 function only(data, fields) {
-  if (!fields.length) return data;
-
-  var _data = {};
-
-  fields.forEach(function(field) {
-    pick(data, _data, field.split('.'));
-  });
-
+  let _data = clone(data);
+  onlyToNull(_data,fields);
   return _data;
 }
 
-// delete a value recursively
-function omit(data, field) {
+/**
+ * Set to null a value recursively
+ *
+ * @param data Data
+ * @param field Value in data
+ */
+function exceptToNull(data, field) {
   if (!data) return;
 
-  if (util.isArray(data)) {
+  if (lodash.isArray(data)) {
     data.forEach(function(_data) {
-      omit(_data, field);
+      exceptToNull(_data, field);
     });
     return;
   }
 
-  var _field = field[0];
+  let _field = field[0];
   if (field.length > 1) {
-    omit(data[_field], field.slice(1));
+    exceptToNull(data[_field], field.slice(1));
     return;
   }
 
   if (data.constructor.name === 'Object') {
-    delete data[_field];
+    defaultExcludedFields.indexOf(_field) !== -1 ? delete data[_field] : data[_field] = null;
   }
 }
 
+/**
+ * Omit fields in data
+ *
+ * @param data
+ * @param fields
+ * @returns {*}
+ */
 function except(data, fields) {
-  var _data = clone(data);
+  let _data = clone(data);
 
   fields.forEach(function(field) {
-    omit(_data, field.split('.'));
+    exceptToNull(_data, field.split('.'));
   });
 
   return _data;
 }
 
+function processInclusive(inclusiveFields){
+  let data = {};
+
+  // For each fields
+  inclusiveFields.forEach(function (inclusive) {
+    let parsedField = inclusive.split('.');
+    let field = parsedField[0];
+    if (parsedField.length > 1) {
+      if(!data[field]){
+        data[field] = {};
+      }
+
+      data[field][parsedField[1]] = 1;
+      return;
+    }
+
+    data[field] = 1;
+  });
+
+  return data;
+}
+
+/**
+ * Include/Exclude de selected fields in data
+ *
+ * @param data
+ * @param fields
+ * @returns {*}
+ */
 function select(data, fields) {
   if (!fields) return data;
 
-  var inclusive = [],
+  let inclusive = [],
     exclusive = [];
 
   fields = normalizeFields(fields);
@@ -148,29 +162,29 @@ function select(data, fields) {
     (fields[field] ? inclusive : exclusive).push(field);
   });
 
-  data = inclusive.length ? only(data, inclusive) : data;
+  data = inclusive.length ? only(data, processInclusive(inclusive)) : data;
   return exclusive.length ? except(data, exclusive) : data;
 }
 
-// include "_id" by default
+/**
+ * If don't include, exclude _id,id and __v
+ *
+ * @param fields
+ */
 function setDefault(fields) {
-  if ('_id' in fields) return;
-
-  var hasInclusion = Object.keys(fields).some(function(f) {
-      return fields[f];
-    });
-  if (hasInclusion) {
-    fields._id = 1;
-  }
+  defaultExcludedFields.forEach(function(defaultField){
+    if (defaultField in fields) return;
+    fields[defaultField] = 0;
+  });
 }
 
-exports = module.exports = function(schema, fields) {
-  var methods = schema.methods,
+exports = module.exports = function(schema, fields = '') {
+  let methods = schema.methods,
     toJSON = methods.toJSON || _toJSON;
 
   // NOTE: toJSON calls toJSON with a same option recursively for all subdocuments.
   methods.toJSON = function(options) {
-    var schemaOptions = this.schema.options.toJSON,
+    let schemaOptions = this.schema.options.toJSON,
       _options = options || schemaOptions || {},
       _fields = (options || {}).select || (schemaOptions || {}).select || fields,
       obj;

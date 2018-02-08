@@ -1,21 +1,31 @@
 {
   "name": "mongoose-json-select",
-  "version": "0.2.1",
-  "description": "a mongoose plugin to limit json fields",
-  "author": "Naoyuki Kanezawa <naoyuki.kanezawa@gmail.com>",
+  "version": "1.0.0",
+  "description": "A mongoose plugin to limit JSON properties and set this properties to null.",
+  "author": "Kubide <hola@kubide.es> (http://kubide.es)",
+  "contributors": [
+    "Roberto Marín Fernández <roberto.marin@kubide.es>"
+  ],
   "keywords": [
-    "mongoose", "json", "plugin", "mongodb",
-    "toJSON", "select", "limit", "filter"
+    "mongoose",
+    "json",
+    "plugin",
+    "mongodb",
+    "toJSON",
+    "select",
+    "limit",
+    "filter"
   ],
   "repository": {
     "type": "git",
-    "url": "git://github.com/nkzawa/mongoose-json-select.git"
+    "url": "git://github.com/Kubide/k-mongoose-json-select.git"
   },
   "scripts": {
-    "test": "node_modules/.bin/mocha --reporter dot"
+    "test": "node_modules/.bin/mocha --colors --reporter spec"
   },
   "dependencies": {
-    "clone": "0.1.11"
+    "clone": "0.1.11",
+    "lodash": "^4.17.5"
   },
   "devDependencies": {
     "mocha": "*",
