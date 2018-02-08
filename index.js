@@ -50,7 +50,7 @@ function onlyToNull(data,fields) {
     }else {
       if (lodash.isArray(data[dataField])) {
         data[dataField].forEach(function (dataArray) {
-          onlyToNull(dataArray, fields);
+          onlyToNull(dataArray, fields[dataField]);
         });
         return;
       }

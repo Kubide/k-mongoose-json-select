@@ -132,95 +132,93 @@ describe('Check selected fields..', function() {
     const json = user.toJSON();
     json.should.have.property('_id');
   });
-  //
-  // it('should handle getters', function() {
-  //   let schema = userSchema(),
-  //     User, user;
-  //
-  //   schema.plugin(jsonSelect, 'username name.full');
-  //   schema.set('toJSON', {getters: true});
-  //   schema.path('username').get(function(v) {
-  //     return v && v.toUpperCase();
-  //   });
-  //   schema.virtual('name.full').get(function() {
-  //     return [this.name.first, this.name.last].join(' ');
-  //   });
-  //
-  //   User = model(schema);
-  //   user = new User(userData);
-  //
-  //   expect(user.toJSON()).to.eql({
-  //     _id: user._id,
-  //     username: user.username,
-  //     name: {full: user.name.full}
-  //   });
-  // });
-  //
-  // it('should call original toJSON', function() {
-  //   let schema = userSchema(),
-  //     username = 'xformed',
-  //     User, user;
-  //
-  //   schema.methods.toJSON = function(options) {
-  //     return {username: username, bar: 'baz'};
-  //   };
-  //   schema.plugin(jsonSelect, 'username');
-  //
-  //   User = model(schema);
-  //   user = new User(userData);
-  //
-  //   expect(user.toJSON()).to.eql({username: username});
-  // });
-  //
-  // describe('embeded documents', function() {
-  //   it('should limit fields of embeded documents', function() {
-  //     let schema = userSchema(),
-  //       User, user, groupSchema, Group, group;
-  //
-  //     User = model('User', schema);
-  //     user = new User(userData);
-  //
-  //     groupSchema = Schema({
-  //       name: String,
-  //       users: [schema]
-  //     });
-  //     groupSchema.plugin(jsonSelect, 'name users.username');
-  //     Group = model('Group', groupSchema);
-  //     group = new Group({name: 'foo', users: [user]});
-  //
-  //     expect(group.toJSON()).to.eql({
-  //       _id: group._id,
-  //       name: group.name,
-  //       users: [{username: user.username}]
-  //     });
-  //   });
-  //
-  //   it('should respect options of embeded documents', function() {
-  //     let schema = userSchema(),
-  //       User, user, groupSchema, Group, group;
-  //
-  //     schema.plugin(jsonSelect, 'username');
-  //
-  //     User = model('User', schema);
-  //     user = new User(userData);
-  //
-  //     groupSchema = Schema({
-  //       name: String,
-  //       users: [schema]
-  //     });
-  //     Group = model('Group', groupSchema);
-  //     group = new Group({name: 'foo', users: [user]});
-  //
-  //     expect(group.toJSON()).to.eql({
-  //       _id: group._id,
-  //       name: group.name,
-  //       users: [{
-  //         _id: user._id,
-  //         username: user.username
-  //       }]
-  //     });
-  //   });
-  // });
+
+  it('should handle getters', function() {
+    let schema = userSchema(),
+      User, user;
+
+    schema.plugin(jsonSelect, 'username name.full');
+    schema.set('toJSON', {getters: true});
+    schema.path('username').get(function(v) {
+      return v && v.toUpperCase();
+    });
+    schema.virtual('name.full').get(function() {
+      return [this.name.first, this.name.last].join(' ');
+    });
+
+    User = model(schema);
+    user = new User(userData);
+
+    const json = user.toJSON();
+    json.should.have.property('username',user.username);
+    json.should.have.property('name')
+      .with.deep.property('full',user.name.full);
+  });
+
+  it('should call original toJSON', function() {
+    let schema = userSchema(),
+      username = 'xformed',
+      User, user;
+
+    schema.methods.toJSON = function(options) {
+      return {username: username, bar: 'baz'};
+    };
+    schema.plugin(jsonSelect, 'username');
+
+    User = model(schema);
+    user = new User(userData);
+
+    const json = user.toJSON();
+    json.should.have.property('username',username);
+  });
+
+  describe('embeded documents', function() {
+    it('should limit fields of embeded documents', function() {
+      let schema = userSchema(),
+        User, user, groupSchema, Group, group;
+
+      User = model('User', schema);
+      user = new User(userData);
+
+      groupSchema = Schema({
+        name: String,
+        users: [schema]
+      });
+      groupSchema.plugin(jsonSelect, 'name users.username');
+      Group = model('Group', groupSchema);
+      group = new Group({name: 'foo', users: [user]});
+
+      const json = group.toJSON();
+      json.should.have.property('name',group.name);
+      json.should.have.property('users')
+        .with.deep.property(0)
+        .with.deep.property('username',user.username);
+    });
+
+    it('should respect options of embeded documents', function() {
+      let schema = userSchema(),
+        User, user, groupSchema, Group, group;
+
+      schema.plugin(jsonSelect, 'username');
+
+      User = model('User', schema);
+      user = new User(userData);
+
+      groupSchema = Schema({
+        name: String,
+        users: [schema]
+      });
+      Group = model('Group', groupSchema);
+      group = new Group({name: 'foo', users: [user]});
+
+      const json = group.toJSON();
+      json.should.have.property('name',group.name);
+      json.should.have.property('_id');
+      json.should.have.property('users')
+        .with.deep.property(0)
+        .with.deep.property('username',user.username);
+    });
+  });
   //
   // describe('populated documents', function() {
   //   it('should limit fields of subdocuments', function() {
