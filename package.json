@@ -1,0 +1,25 @@
+{
+  "name": "mongoose-json-select",
+  "version": "0.2.1",
+  "description": "a mongoose plugin to limit json fields",
+  "author": "Naoyuki Kanezawa <naoyuki.kanezawa@gmail.com>",
+  "keywords": [
+    "mongoose", "json", "plugin", "mongodb",
+    "toJSON", "select", "limit", "filter"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/nkzawa/mongoose-json-select.git"
+  },
+  "scripts": {
+    "test": "node_modules/.bin/mocha --reporter dot"
+  },
+  "dependencies": {
+    "clone": "0.1.11"
+  },
+  "devDependencies": {
+    "mocha": "*",
+    "chai": "*",
+    "mongoose": "*"
+  }
+}
