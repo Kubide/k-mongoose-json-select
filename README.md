@@ -1,11 +1,9 @@
 # mongoose-json-select
-[![Build Status](https://travis-ci.org/nkzawa/mongoose-json-select.png?branch=master)](https://travis-ci.org/nkzawa/mongoose-json-select)
-[![NPM version](https://badge.fury.io/js/mongoose-json-select.png)](http://badge.fury.io/js/mongoose-json-select)
 
-A mongoose plugin to limit JSON properties.
+A mongoose plugin to limit JSON properties and set the selected fields to null.
 
 ```js
-var jsonSelect = require('mongoose-json-select');
+var jsonSelect = require('k-mongoose-json-select');
 
 var schema = Schema({
   name: String,
@@ -17,14 +15,14 @@ var User = mongoose.model('User', schema);
 
 var user = User({name: 'alice', email: 'alice@example.com'});
 JSON.stringify(user);
-// -> '{"_id": "51466baedf03a52e9b000001", "name": "alice", "created": "2013-03-16T16:08:38.065Z"}'
+// -> '{"name": "alice", "email": null , "created": "2013-03-16T16:08:38.065Z"}'
 
 JSON.stringify(user.toJSON({select: 'name email'}));
-// -> '{"_id": "51466baedf03a52e9b000001", "name": "alice", "email": "alice@example.com"}'
+// -> '{"name": "alice", "email": "alice@example.com", "created": null }'
 ```
 
 ## Installation
-    $ npm install mongoose-json-select
+    $ npm install k-mongoose-json-select
 
 ## Usage
 Inclusion/Exclusion
@@ -38,9 +36,9 @@ schema.plugin(jsonSelect, '-name.last');
 schema.plugin(jsonSelect, {'name.last': 0});
 ```
 
-Always includes _id field if the field is not excluded explicitly.
+Always exclude _id,id and __v field if the field is not included explicitly.
 ```js
-schema.plugin(jsonSelect, 'name');  // contains 'name' and '_id'
+schema.plugin(jsonSelect, 'name');  // contains 'name' only
 ```
 
 Configures default fields as a plugin option or schema option.
@@ -61,18 +59,11 @@ JSON.stringify(doc.toJSON({select: 'name email'}));
 The syntax for fields is the same with mongoose's Query#select.
 
 http://mongoosejs.com/docs/api.html#query_Query-select
-
-
-## Documentation
-
-### select(obj, fields)
-Creates a deep clone of 'obj' filtered by 'fields'.
-
-```js
-var select = require('mongoose-json-select').select;
-select({a: {b: 'foo'}, c: 'bar'}, 'a.b');
-// -> {a: {b: 'foo'}}
 ```
+
+## Support
+
+This plugin is proudly supported by [Kubide](http://kubide.es/) [desarrollo@kubide.es](mailto:desarrollo@kubide.es)
 
 ## License
 MIT
