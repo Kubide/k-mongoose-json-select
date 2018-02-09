@@ -59,7 +59,6 @@ JSON.stringify(doc.toJSON({select: 'name email'}));
 The syntax for fields is the same with mongoose's Query#select.
 
 http://mongoosejs.com/docs/api.html#query_Query-select
-```
 
 ## Support
 
@@ -67,4 +66,5 @@ This plugin is proudly supported by [Kubide](http://kubide.es/) [desarrollo@kubi
 
 ## License
 MIT
+```
 
