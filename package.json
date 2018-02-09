@@ -1,5 +1,5 @@
 {
-  "name": "mongoose-json-select",
+  "name": "k-mongoose-json-select",
   "version": "1.0.0",
   "description": "A mongoose plugin to limit JSON properties and set this properties to null.",
   "author": "Kubide <hola@kubide.es> (http://kubide.es)",
