@@ -1,6 +1,6 @@
 # mongoose-json-select
 
-A mongoose plugin to limit JSON properties and set the selected fields to null.
+A mongoose plugin to limit JSON properties and set the unselected fields to null.
 
 ```js
 var jsonSelect = require('k-mongoose-json-select');
