@@ -286,6 +286,7 @@ describe('Check selected fields..', function() {
       data.should.to.eql({a: ['foo', 'bar']});
     });
 
+    // TODO
     // it('should pick only objects and arrays in a array', function() {
     //   let obj = {a: [
     //       {b: 'foo'}, {b:'bar', c: true}, [{b: 'baz'}],
